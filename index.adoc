@@ -1,0 +1,186 @@
+= HW2 - Text Mining/NLP
+
+== Data Description
+
+* **Dataset**: NLTK Inaugural Addresses Corpus
+* **Source**: US Presidential inaugural speeches (George Washington 1789 - present)
+* **Sentences processed**: 600
+* **Content**: Political speeches on governance, economy, security, and society
+
+== How to Run
+
+[source,bash]
+----
+cd src
+pip install -r requirements.txt
+python main.py
+----
+
+MLflow results are saved locally to `src/mlruns/`.
+
+== Results
+
+=== 1. Sentiment Analysis
+
+==== NLTK VADER Results
+|===
+|Label |Count
+
+|Positive |429
+|Negative |106
+|Neutral |65
+|===
+
+==== Hugging Face DistilBERT Results
+|===
+|Label |Count
+
+|Positive |396
+|Negative |204
+|===
+
+==== Comparison
+* **Method agreement**: 68%
+* NLTK uses lexicon-based approach with explicit neutral class
+* HF uses transformer model with binary classification only
+* NLTK tends to classify more sentences as positive/neutral
+* HF forces binary decision, resulting in more negative classifications
+
+=== 2. Named Entity Recognition (NER)
+
+==== NLTK NER - Top Entities
+|===
+|Entity |Count |Type
+
+|United States |46 |GPE
+|Union |29 |ORGANIZATION
+|Congress |14 |ORGANIZATION
+|American |10 |GPE
+|States |10 |GPE
+|Constitution |9 |ORGANIZATION
+|Europe |8 |GPE
+|America |7 |GPE
+|===
+
+==== Hugging Face NER - Top Entities
+|===
+|Entity |Count |Type
+
+|United States |46 |LOC
+|Union |34 |ORG
+|States |19 |LOC
+|Constitution |14 |MISC
+|Congress |11 |ORG
+|American |7 |MISC
+|British |6 |MISC
+|Europe |6 |LOC
+|===
+
+==== Comparison
+* NLTK found 325 entities across 6 types (GPE, ORGANIZATION, PERSON, LOCATION, FACILITY, GSP)
+* HF found 285 entities across 4 types (LOC, ORG, MISC, PER)
+* Both methods agree on top entities (United States, Union, Congress)
+* NLTK uses finer-grained taxonomy; HF uses simpler 4-class system
+
+=== 3. Entity Classification
+
+|===
+|Entity Type |NLTK Count |HF Count
+
+|GPE/LOC |156 |129
+|ORGANIZATION/ORG |150 |86
+|PERSON/PER |15 |4
+|MISC |- |66
+|LOCATION |2 |-
+|FACILITY |1 |-
+|GSP |1 |-
+|===
+
+=== 4. Zero-Shot Classification
+
+Categories selected for inaugural addresses:
+
+|===
+|Category |Count |Percentage
+
+|Governance |238 |39.7%
+|Society |206 |34.3%
+|War/Security |65 |10.8%
+|Economy |59 |9.8%
+|Politics |32 |5.3%
+|===
+
+Governance and society dominate, reflecting the nature of inaugural speeches.
+
+=== 5. Text Summarization
+
+**Model**: facebook/bart-large-cnn
+
+**Generated Summary**:
+[quote]
+"The magnitude and difficulty of the trust to which the voice of my country called me could not but overwhelm with despondence," he writes. "I give way to my entire confidence in your discernment and pursuit of the public good." "I must decline as inapplicable to myself any share in the personal emoluments," he added.
+
+== Method Comparison
+
+|===
+|Task |NLTK |Hugging Face
+
+|Sentiment
+|Fast, interpretable, 3-class
+|Context-aware, binary only
+
+|NER
+|6+ entity types, rule-based
+|4 types, higher precision
+
+|Entity Classification
+|Fine-grained taxonomy
+|Simpler, consistent
+
+|Zero-shot
+|N/A
+|Flexible category classification
+
+|Summarization
+|N/A
+|Abstractive summaries
+|===
+
+== Issues During Implementation
+
+1. **Token limits**: HF models limited to 512 tokens; required truncation
+2. **No neutral class**: HF sentiment model lacks neutral, complicating comparison
+3. **Taxonomy mismatch**: NLTK GPE vs HF LOC not directly comparable
+
+== Future Improvements
+
+1. Create visualizations of entity relationships
+2. Compare with other text corpora (news, social media)
+
+== MLflow Logging
+
+Experiment: `hw-02-nlp`
+
+**Parameters logged**:
+
+* dataset_name: nltk_inaugural_addresses
+* num_sentences: 600
+* data_source: nltk inaugural corpus
+
+**Metrics logged**:
+
+* Sentiment counts (NLTK/HF positive, negative, neutral)
+* Sentiment method agreement rate
+* NER total and unique entity counts
+* Entity class distributions
+* Zero-shot category counts
+* Summarization compression ratio
+
+**Artifacts**:
+
+* sentences.csv
+* sentiment_nltk.csv, sentiment_hf.csv
+* ner_nltk.csv, ner_hf.csv
+* entity_classification_comparison.csv
+* zero_shot.csv
+* summary.txt
